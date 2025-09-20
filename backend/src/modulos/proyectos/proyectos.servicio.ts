@@ -9,26 +9,26 @@ import { UsuariosService } from '../usuarios/usuarios.servicio';
 export class ProyectosService {
   constructor(
     @InjectRepository(Proyecto)
-    private readonly proyectoRepositorio: Repository<Proyecto>,
-    private readonly usuariosService: UsuariosService,
+    private readonly repositorio_proyecto: Repository<Proyecto>,
+    private readonly servicio_usuarios: UsuariosService,
   ) {}
 
-  async crear(crearProyectoDto: CrearProyectoDto) {
-    const { estudianteId, asesorId, titulo } = crearProyectoDto;
-    const estudiante = await this.usuariosService.obtenerUno(estudianteId);
-    const asesor = await this.usuariosService.obtenerUno(asesorId);
+  async crear(crear_proyecto_dto: CrearProyectoDto) {
+    const { id_estudiante, id_asesor, titulo } = crear_proyecto_dto;
+    const estudiante = await this.servicio_usuarios.obtenerUno(id_estudiante);
+    const asesor = await this.servicio_usuarios.obtenerUno(id_asesor);
 
-    const nuevoProyecto = this.proyectoRepositorio.create({
+    const nuevo_proyecto = this.repositorio_proyecto.create({
       titulo,
       estudiante,
       asesor,
     });
 
-    return this.proyectoRepositorio.save(nuevoProyecto);
+    return this.repositorio_proyecto.save(nuevo_proyecto);
   }
 
-  async obtenerUno(id: string) {
-    const proyecto = await this.proyectoRepositorio.findOneBy({ id });
+  async obtenerUno(id: number) {
+    const proyecto = await this.repositorio_proyecto.findOneBy({ id });
     if (!proyecto) {
       throw new NotFoundException(`Proyecto con ID '${id}' no encontrado.`);
     }

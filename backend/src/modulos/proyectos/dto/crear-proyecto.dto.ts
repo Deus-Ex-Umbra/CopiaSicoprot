@@ -1,15 +1,19 @@
-import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CrearProyectoDto {
+  @ApiProperty({ description: 'Título del proyecto de tesis', example: 'Desarrollo de un sistema de gestión académica' })
   @IsString()
   @IsNotEmpty()
   titulo: string;
 
-  @IsUUID()
+  @ApiProperty({ description: 'ID del usuario estudiante que crea el proyecto', example: 1 })
+  @IsNumber()
   @IsNotEmpty()
-  estudianteId: string;
+  id_estudiante: number;
 
-  @IsUUID()
+  @ApiProperty({ description: 'ID del usuario asesor asignado al proyecto', example: 2 })
+  @IsNumber()
   @IsNotEmpty()
-  asesorId: string;
+  id_asesor: number;
 }

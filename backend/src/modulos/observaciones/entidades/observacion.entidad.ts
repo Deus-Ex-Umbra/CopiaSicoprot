@@ -1,21 +1,40 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
 import { Documento } from '../../documentos/entidades/documento.entidad';
-import { Usuario } from '../../usuarios/entidades/usuario.entidad';
+import { Asesor } from '../../asesores/entidades/asesor.entidad';
+import { EstadoObservacion } from '../enums/estado-observacion.enum';
 
 @Entity('observaciones')
 export class Observacion {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column('text')
   contenido: string;
+  
+  @Column({ type: 'enum', enum: EstadoObservacion, default: EstadoObservacion.Pendiente })
+  estado: EstadoObservacion;
+  
+  @Column({ type: 'int', nullable: true })
+  pagina: number;
+
+  @Column({ type: 'float', nullable: true })
+  posicion_x: number;
+
+  @Column({ type: 'float', nullable: true })
+  posicion_y: number;
+
+  @Column({ type: 'float', nullable: true })
+  ancho: number;
+
+  @Column({ type: 'float', nullable: true })
+  alto: number;
 
   @CreateDateColumn({ name: 'fecha_creacion' })
-  fechaCreacion: Date;
+  fecha_creacion: Date;
 
   @ManyToOne(() => Documento, (documento) => documento.observaciones)
   documento: Documento;
 
-  @ManyToOne(() => Usuario, (usuario) => usuario.observacionesRealizadas, { eager: true })
-  autor: Usuario;
+  @ManyToOne(() => Asesor, (asesor) => asesor.observaciones_realizadas, { eager: true })
+  autor: Asesor;
 }
