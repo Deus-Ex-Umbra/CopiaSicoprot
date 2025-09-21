@@ -27,4 +27,12 @@ export class DocumentosService {
 
     return this.repositorio_documento.save(nuevo_documento);
   }
+
+  async obtenerUno(id: number): Promise<Documento> {
+    const documento = await this.repositorio_documento.findOneBy({ id });
+    if (!documento) {
+      throw new NotFoundException(`Documento con ID '${id}' no encontrado.`);
+    }
+    return documento;
+  }
 }

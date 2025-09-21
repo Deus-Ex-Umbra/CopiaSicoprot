@@ -98,20 +98,6 @@ const Panel = () => {
           </>
         )}
       </Row>
-
-      <Card className="mt-5" style={{ backgroundColor: 'var(--color-fondo-tarjeta)' }}>
-        <Card.Body>
-          <h5 className="text-light mb-3">Información del Sistema</h5>
-          <p className="text-muted">
-            SICOPROT - Sistema de Control de Proyectos de Tesis
-          </p>
-          <ul className="text-muted">
-            <li>Versión: 1.0.0</li>
-            <li>Rol actual: {usuario?.rol}</li>
-            <li>Correo: {usuario?.correo}</li>
-          </ul>
-        </Card.Body>
-      </Card>
     </div>
   );
 };

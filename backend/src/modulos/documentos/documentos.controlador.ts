@@ -1,8 +1,11 @@
-import { Controller, Post, Param, UploadedFile, UseInterceptors, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Param, UploadedFile, UseInterceptors, ParseIntPipe, Get, Res } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentosService } from './documentos.servicio';
 import { diskStorage } from 'multer';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import type { Response } from 'express';
+import { createReadStream } from 'fs';
+import { join } from 'path';
 
 @ApiTags('documentos')
 @Controller('documentos')
@@ -43,5 +46,14 @@ export class DocumentosController {
     @UploadedFile() archivo: Express.Multer.File,
   ) {
     return this.servicio_documentos.guardarRegistro(proyectoId, archivo);
+  }
+
+  @Get(':id/archivo')
+  @ApiOperation({ summary: 'Obtener el archivo de un documento' })
+  async obtenerArchivo(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+    const documento = await this.servicio_documentos.obtenerUno(id);
+    const file = createReadStream(join(process.cwd(), documento.ruta_archivo));
+    res.setHeader('Content-Type', 'application/pdf');
+    file.pipe(res);
   }
 }

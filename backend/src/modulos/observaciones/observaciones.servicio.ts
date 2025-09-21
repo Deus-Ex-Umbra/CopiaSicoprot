@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { CrearObservacionDto } from './dto/crear-observacion.dto';
 import { Documento } from '../documentos/entidades/documento.entidad';
 import { Asesor } from '../asesores/entidades/asesor.entidad';
+import { Estudiante } from '../estudiantes/entidades/estudiante.entidad';
 import { ActualizarObservacionDto } from './dto/actualizar-observacion.dto';
 
 @Injectable()
@@ -16,6 +17,8 @@ export class ObservacionesService {
     private readonly repositorio_documento: Repository<Documento>,
     @InjectRepository(Asesor)
     private readonly repositorio_asesor: Repository<Asesor>,
+    @InjectRepository(Estudiante)
+    private readonly repositorio_estudiante: Repository<Estudiante>,
   ) {}
 
   async crear(id_documento: number, crear_observacion_dto: CrearObservacionDto, id_usuario: number) {
@@ -53,6 +56,27 @@ export class ObservacionesService {
       relations: ['correccion', 'correccion.estudiante'],
       order: { fecha_creacion: 'DESC' },
     });
+  }
+
+  async obtenerPorEstudiante(id_usuario_estudiante: number) {
+    const estudiante = await this.repositorio_estudiante.findOne({ where: { usuario: { id: id_usuario_estudiante } }, relations: ['proyectos'] });
+  
+    if (!estudiante) {
+      throw new NotFoundException(`Estudiante con ID de usuario '${id_usuario_estudiante}' no encontrado.`);
+    }
+  
+    const proyectosIds = estudiante.proyectos.map(p => p.id);
+  
+    if (proyectosIds.length === 0) {
+      return [];
+    }
+  
+    return this.repositorio_observacion.createQueryBuilder('observacion')
+      .innerJoinAndSelect('observacion.documento', 'documento')
+      .innerJoin('documento.proyecto', 'proyecto')
+      .where('proyecto.id IN (:...proyectosIds)', { proyectosIds })
+      .orderBy('observacion.fecha_creacion', 'DESC')
+      .getMany();
   }
 
   async actualizar(id: number, actualizar_observacion_dto: ActualizarObservacionDto, id_usuario: number) {

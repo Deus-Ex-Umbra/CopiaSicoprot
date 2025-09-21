@@ -1,19 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ChangeEvent } from 'react';
 import { Card, Button, Table, Badge, Alert, Modal, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { FaPlus, FaEye, FaFileUpload } from 'react-icons/fa';
 import { useAutenticacion } from '../contextos/ContextoAutenticacion';
 import { obtenerProyectos, crearProyecto } from '../servicios/proyectos.servicio';
-import { Proyecto, Rol } from '../tipos/usuario';
+import { obtenerAsesores } from '../servicios/asesores.servicio';
+import { type Proyecto, type Usuario, Rol } from '../tipos/usuario';
+import TomSelect from 'tom-select';
 
 const Proyectos = () => {
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
+  const [asesores, setAsesores] = useState<Usuario[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [mostrarModal, setMostrarModal] = useState(false);
   const [nuevoProyecto, setNuevoProyecto] = useState({
     titulo: '',
-    id_estudiante: 0,
     id_asesor: 0,
   });
   
@@ -23,7 +25,10 @@ const Proyectos = () => {
 
   useEffect(() => {
     cargarProyectos();
-  }, []);
+    if (esEstudiante) {
+      cargarAsesores();
+    }
+  }, [esEstudiante]);
 
   const cargarProyectos = async () => {
     try {
@@ -31,33 +36,51 @@ const Proyectos = () => {
       const data = await obtenerProyectos();
       setProyectos(data);
     } catch (err: any) {
-      console.error('Error al cargar proyectos:', err);
       setError('Error al cargar los proyectos');
     } finally {
       setCargando(false);
     }
   };
 
-  const manejarCrearProyecto = async () => {
+  const cargarAsesores = async () => {
     try {
-      if (!nuevoProyecto.titulo) {
-        setError('El título es requerido');
-        return;
-      }
+      const data = await obtenerAsesores();
+      setAsesores(data);
+    } catch (err) {
+      setError('Error al cargar los asesores');
+    }
+  };
 
-      const proyecto = {
-        ...nuevoProyecto,
-        id_estudiante: usuario?.perfil?.id_estudiante || 0,
-      };
+  const manejarCrearProyecto = async () => {
+    if (!nuevoProyecto.titulo || !nuevoProyecto.id_asesor) {
+      setError('Todos los campos son obligatorios');
+      return;
+    }
 
-      await crearProyecto(proyecto);
+    try {
+      await crearProyecto(nuevoProyecto);
       setMostrarModal(false);
       await cargarProyectos();
-      setNuevoProyecto({ titulo: '', id_estudiante: 0, id_asesor: 0 });
+      setNuevoProyecto({ titulo: '', id_asesor: 0 });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al crear el proyecto');
     }
   };
+
+  useEffect(() => {
+    if (mostrarModal && asesores.length > 0) {
+      const select = new TomSelect('#select-asesor', {
+        create: false,
+        sortField: {
+            field: 'text',
+            direction: 'asc'
+        },
+      });
+      return () => {
+        select.destroy();
+      };
+    }
+  }, [mostrarModal, asesores]);
 
   if (cargando) {
     return (
@@ -72,7 +95,9 @@ const Proyectos = () => {
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="text-light">Mis Proyectos</h2>
+        <h2 className="text-light">
+          {esEstudiante ? 'Mis Proyectos' : 'Proyectos Asignados'}
+        </h2>
         {esEstudiante && (
           <Button variant="primary" onClick={() => setMostrarModal(true)}>
             <FaPlus className="me-2" />
@@ -86,7 +111,9 @@ const Proyectos = () => {
       {proyectos.length === 0 ? (
         <Card style={{ backgroundColor: 'var(--color-fondo-tarjeta)' }}>
           <Card.Body className="text-center py-5">
-            <p className="text-muted mb-3">No tienes proyectos registrados</p>
+            <p className="text-muted mb-3">
+              {esEstudiante ? 'No tienes proyectos registrados' : 'No tienes proyectos asignados'}
+            </p>
             {esEstudiante && (
               <Button variant="primary" onClick={() => setMostrarModal(true)}>
                 <FaPlus className="me-2" />
@@ -137,7 +164,7 @@ const Proyectos = () => {
                         <Button
                           variant="outline-success"
                           size="sm"
-                          onClick={() => navigate(`/panel/proyecto/${proyecto.id}/subir-documento`)}
+                          onClick={() => navigate(`/panel/proyecto/${proyecto.id}`)}
                         >
                           <FaFileUpload className="me-1" />
                           Subir Doc
@@ -168,13 +195,18 @@ const Proyectos = () => {
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>ID del Asesor</Form.Label>
-              <Form.Control
-                type="number"
-                value={nuevoProyecto.id_asesor}
-                onChange={(e) => setNuevoProyecto({ ...nuevoProyecto, id_asesor: parseInt(e.target.value) })}
-                placeholder="ID del asesor asignado"
-              />
+              <Form.Label>Asesor</Form.Label>
+              <select 
+                id="select-asesor"
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => setNuevoProyecto({ ...nuevoProyecto, id_asesor: parseInt(e.target.value)})}
+              >
+                <option value="">Selecciona un asesor...</option>
+                {asesores.map(asesor => (
+                  <option key={asesor.id} value={asesor.perfil?.id_asesor}>
+                    {asesor.perfil?.nombre} {asesor.perfil?.apellido}
+                  </option>
+                ))}
+              </select>
             </Form.Group>
           </Form>
         </Modal.Body>

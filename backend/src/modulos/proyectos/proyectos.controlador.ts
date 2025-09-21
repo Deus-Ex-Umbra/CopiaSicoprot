@@ -1,9 +1,12 @@
-import { Controller, Get, Post, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, ParseIntPipe, UseGuards, Request } from '@nestjs/common';
 import { ProyectosService } from './proyectos.servicio';
 import { CrearProyectoDto } from './dto/crear-proyecto.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtGuard } from '../autenticacion/guards/jwt.guard';
 
 @ApiTags('proyectos')
+@ApiBearerAuth()
+@UseGuards(JwtGuard)
 @Controller('proyectos')
 export class ProyectosController {
   constructor(private readonly servicio_proyectos: ProyectosService) {}
@@ -12,8 +15,15 @@ export class ProyectosController {
   @ApiOperation({ summary: 'Crear un nuevo proyecto' })
   @ApiResponse({ status: 201, description: 'Proyecto creado exitosamente.' })
   @ApiResponse({ status: 404, description: 'Estudiante o Asesor no encontrado.' })
-  crear(@Body() crear_proyecto_dto: CrearProyectoDto) {
-    return this.servicio_proyectos.crear(crear_proyecto_dto);
+  crear(@Body() crear_proyecto_dto: CrearProyectoDto, @Request() req) {
+    return this.servicio_proyectos.crear(crear_proyecto_dto, req.user.id_usuario);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Obtener todos los proyectos' })
+  @ApiResponse({ status: 200, description: 'Lista de todos los proyectos.' })
+  obtenerTodos() {
+    return this.servicio_proyectos.obtenerTodos();
   }
 
   @Get(':id')

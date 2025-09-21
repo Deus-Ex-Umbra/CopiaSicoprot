@@ -1,25 +1,35 @@
-import { Outlet, Navigate } from 'react-router-dom';
-import { useAutenticacion } from '../contextos/ContextoAutenticacion';
+import { useState } from 'react';
+import { Outlet } from 'react-router-dom';
+import Cabecera from '../componentes/Cabecera';
+import BarraLateral from '../componentes/BarraLateral';
 
-const LayoutAutenticacion = () => {
-  const { estaAutenticado } = useAutenticacion();
+const LayoutPanel = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  if (estaAutenticado()) {
-    return <Navigate to="/panel" replace />;
-  }
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
 
   return (
-    <div className="login-page" style={{ minHeight: '100vh' }}>
-      <div className="login-box">
-        <div className="login-logo">
-          <a href="#">
-            <b>SICOPROT</b>
-          </a>
-        </div>
-        <Outlet />
+    <div className="wrapper">
+      <Cabecera toggleSidebar={toggleSidebar} />
+      <BarraLateral isOpen={sidebarOpen} />
+
+      <div 
+        className="content-wrapper" 
+        style={{ 
+          marginLeft: sidebarOpen ? '250px' : '0', 
+          transition: 'margin-left 0.3s ease' 
+        }}
+      >
+        <section className="content">
+          <div className="container-fluid pt-3">
+            <Outlet />
+          </div>
+        </section>
       </div>
     </div>
   );
 };
 
-export default LayoutAutenticacion;
+export default LayoutPanel;

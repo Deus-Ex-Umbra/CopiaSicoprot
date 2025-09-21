@@ -6,6 +6,10 @@ import Registro from '../paginas/Registro';
 import Panel from '../paginas/Panel';
 import Proyectos from '../paginas/Proyectos';
 import DetalleProyecto from '../paginas/DetalleProyecto';
+import MisDocumentos from '../paginas/MisDocumentos';
+import Observaciones from '../paginas/Observaciones';
+import MisEstudiantes from '../paginas/MisEstudiantes';
+import RevisarDocumentos from '../paginas/RevisarDocumentos';
 import RutaProtegida from '../componentes/RutaProtegida';
 import { Rol } from '../tipos/usuario';
 
@@ -49,18 +53,10 @@ const router = createBrowserRouter([
         element: <DetalleProyecto />,
       },
       {
-        path: 'proyecto/:id/subir-documento',
-        element: (
-          <RutaProtegida roles_permitidos={[Rol.Estudiante]}>
-            <DetalleProyecto />
-          </RutaProtegida>
-        ),
-      },
-      {
         path: 'mis-documentos',
         element: (
           <RutaProtegida roles_permitidos={[Rol.Estudiante]}>
-            <DetalleProyecto />
+            <MisDocumentos />
           </RutaProtegida>
         ),
       },
@@ -68,7 +64,7 @@ const router = createBrowserRouter([
         path: 'observaciones',
         element: (
           <RutaProtegida roles_permitidos={[Rol.Estudiante]}>
-            <DetalleProyecto />
+            <Observaciones />
           </RutaProtegida>
         ),
       },
@@ -76,7 +72,7 @@ const router = createBrowserRouter([
         path: 'estudiantes',
         element: (
           <RutaProtegida roles_permitidos={[Rol.Asesor]}>
-            <Proyectos />
+            <MisEstudiantes />
           </RutaProtegida>
         ),
       },
@@ -84,7 +80,7 @@ const router = createBrowserRouter([
         path: 'revisar',
         element: (
           <RutaProtegida roles_permitidos={[Rol.Asesor]}>
-            <Proyectos />
+            <RevisarDocumentos />
           </RutaProtegida>
         ),
       },

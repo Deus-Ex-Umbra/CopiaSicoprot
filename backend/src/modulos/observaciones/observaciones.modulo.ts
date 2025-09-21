@@ -5,12 +5,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Observacion } from './entidades/observacion.entidad';
 import { DocumentosModule } from '../documentos/documentos.modulo';
 import { AsesoresModule } from '../asesores/asesores.modulo';
+import { EstudiantesModule } from '../estudiantes/estudiantes.modulo';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Observacion]),
     DocumentosModule,
     AsesoresModule,
+    EstudiantesModule,
   ],
   controllers: [ObservacionesController],
   providers: [ObservacionesService],

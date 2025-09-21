@@ -7,12 +7,7 @@ export class CrearProyectoDto {
   @IsNotEmpty()
   titulo: string;
 
-  @ApiProperty({ description: 'ID del usuario estudiante que crea el proyecto', example: 1 })
-  @IsNumber()
-  @IsNotEmpty()
-  id_estudiante: number;
-
-  @ApiProperty({ description: 'ID del usuario asesor asignado al proyecto', example: 2 })
+  @ApiProperty({ description: 'ID del asesor asignado al proyecto', example: 2 })
   @IsNumber()
   @IsNotEmpty()
   id_asesor: number;

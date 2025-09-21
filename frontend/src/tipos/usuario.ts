@@ -1,10 +1,12 @@
-export enum Rol {
-  Estudiante = 'estudiante',
-  Asesor = 'asesor',
-  Tutor = 'tutor',
-  Tribunal = 'tribunal',
-  Administrador = 'administrador',
-}
+export const Rol = {
+  Estudiante: 'estudiante',
+  Asesor: 'asesor',
+  Tutor: 'tutor',
+  Tribunal: 'tribunal',
+  Administrador: 'administrador',
+} as const;
+
+export type Rol = typeof Rol[keyof typeof Rol];
 
 export interface Usuario {
   id: number;
@@ -38,6 +40,7 @@ export interface Documento {
 
 export interface Observacion {
   id: number;
+  titulo: string;
   contenido: string;
   estado: 'pendiente' | 'corregida' | 'aprobada';
   x_inicio: number;
@@ -55,6 +58,7 @@ export interface Observacion {
 
 export interface Correccion {
   id: number;
+  titulo: string;
   descripcion: string;
   x_inicio: number;
   y_inicio: number;

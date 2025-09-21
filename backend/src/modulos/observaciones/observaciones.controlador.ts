@@ -37,6 +37,12 @@ export class ObservacionesController {
   ) {
     return this.servicio_observaciones.obtenerPorDocumento(documentoId, incluir_archivadas);
   }
+  
+  @Get('por-estudiante')
+  @ApiOperation({ summary: 'Obtener todas las observaciones de un estudiante' })
+  obtenerPorEstudiante(@Request() req) {
+    return this.servicio_observaciones.obtenerPorEstudiante(req.user.id_usuario);
+  }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar el estado de una observación' })

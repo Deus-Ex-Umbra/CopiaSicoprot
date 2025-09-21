@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Card, Button, ButtonGroup, Badge, Form, Modal, Alert } from 'react-bootstrap';
 import { 
@@ -7,14 +7,12 @@ import {
   FaPlus, 
   FaMinus, 
   FaComment, 
-  FaCheck,
   FaEdit,
-  FaTrash
 } from 'react-icons/fa';
 import { useAutenticacion } from '../contextos/ContextoAutenticacion';
-import { Rol, Observacion, Correccion } from '../tipos/usuario';
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-import 'react-pdf/dist/esm/Page/TextLayer.css';
+import { type Observacion, type Correccion, Rol } from '../tipos/usuario';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -316,7 +314,6 @@ const VisualizadorDocumento: React.FC<Props> = ({
         </div>
       </Card.Body>
 
-      {/* Modal para crear observación */}
       <Modal show={mostrarModalObservacion} onHide={() => setMostrarModalObservacion(false)}>
         <Modal.Header closeButton style={{ backgroundColor: 'var(--color-fondo-tarjeta)' }}>
           <Modal.Title>Nueva Observación</Modal.Title>
@@ -346,7 +343,6 @@ const VisualizadorDocumento: React.FC<Props> = ({
         </Modal.Footer>
       </Modal>
 
-      {/* Modal para crear corrección */}
       <Modal show={mostrarModalCorreccion} onHide={() => setMostrarModalCorreccion(false)}>
         <Modal.Header closeButton style={{ backgroundColor: 'var(--color-fondo-tarjeta)' }}>
           <Modal.Title>Nueva Corrección</Modal.Title>

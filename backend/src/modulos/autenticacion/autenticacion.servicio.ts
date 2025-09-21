@@ -11,6 +11,13 @@ import { Estudiante } from '../estudiantes/entidades/estudiante.entidad';
 import { Asesor } from '../asesores/entidades/asesor.entidad';
 import { JwtService } from '@nestjs/jwt';
 
+export interface Perfil {
+  id_estudiante?: number;
+  id_asesor?: number;
+  nombre: string;
+  apellido: string;
+}
+
 @Injectable()
 export class AutenticacionService {
   constructor(
@@ -47,7 +54,7 @@ export class AutenticacionService {
 
     const { contrasena: _, ...datos_usuario } = usuario;
 
-    let perfil_completo = null;
+    let perfil_completo: Perfil | null = null;
     if (usuario.rol === Rol.Estudiante) {
       const estudiante = await this.repositorio_estudiante.findOne({
         where: { usuario: { id: usuario.id } },
@@ -94,7 +101,7 @@ export class AutenticacionService {
 
       const usuario_guardado = await this.repositorio_usuario.save(nuevo_usuario);
 
-      let perfil_completo = null;
+      let perfil_completo: Perfil | null = null;
 
       if (rol === Rol.Estudiante) {
         const nuevo_estudiante = this.repositorio_estudiante.create({
