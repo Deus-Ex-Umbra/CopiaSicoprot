@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { Rol } from '../usuarios/enums/rol.enum';
 import { Estudiante } from '../estudiantes/entidades/estudiante.entidad';
 import { Asesor } from '../asesores/entidades/asesor.entidad';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AutenticacionService {
@@ -20,6 +21,7 @@ export class AutenticacionService {
     private readonly repositorio_estudiante: Repository<Estudiante>,
     @InjectRepository(Asesor)
     private readonly repositorio_asesor: Repository<Asesor>,
+    private readonly jwt_service: JwtService,
   ) {}
 
   async iniciarSesion(iniciar_sesion_dto: IniciarSesionDto) {
@@ -35,11 +37,48 @@ export class AutenticacionService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
+    const payload = { 
+      sub: usuario.id, 
+      correo: usuario.correo, 
+      rol: usuario.rol 
+    };
+
+    const token_acceso = await this.jwt_service.signAsync(payload);
+
     const { contrasena: _, ...datos_usuario } = usuario;
+
+    let perfil_completo = null;
+    if (usuario.rol === Rol.Estudiante) {
+      const estudiante = await this.repositorio_estudiante.findOne({
+        where: { usuario: { id: usuario.id } },
+      });
+      if (estudiante) {
+        perfil_completo = {
+          id_estudiante: estudiante.id,
+          nombre: estudiante.nombre,
+          apellido: estudiante.apellido,
+        };
+      }
+    } else if (usuario.rol === Rol.Asesor) {
+      const asesor = await this.repositorio_asesor.findOne({
+        where: { usuario: { id: usuario.id } },
+      });
+      if (asesor) {
+        perfil_completo = {
+          id_asesor: asesor.id,
+          nombre: asesor.nombre,
+          apellido: asesor.apellido,
+        };
+      }
+    }
 
     return {
       message: 'Inicio de sesión exitoso',
-      usuario: datos_usuario,
+      token_acceso,
+      usuario: {
+        ...datos_usuario,
+        perfil: perfil_completo,
+      },
     };
   }
 
@@ -55,24 +94,52 @@ export class AutenticacionService {
 
       const usuario_guardado = await this.repositorio_usuario.save(nuevo_usuario);
 
+      let perfil_completo = null;
+
       if (rol === Rol.Estudiante) {
         const nuevo_estudiante = this.repositorio_estudiante.create({
           nombre,
           apellido,
           usuario: usuario_guardado,
         });
-        await this.repositorio_estudiante.save(nuevo_estudiante);
+        const estudiante_guardado = await this.repositorio_estudiante.save(nuevo_estudiante);
+        perfil_completo = {
+          id_estudiante: estudiante_guardado.id,
+          nombre: estudiante_guardado.nombre,
+          apellido: estudiante_guardado.apellido,
+        };
       } else if (rol === Rol.Asesor) {
         const nuevo_asesor = this.repositorio_asesor.create({
           nombre,
           apellido,
           usuario: usuario_guardado,
         });
-        await this.repositorio_asesor.save(nuevo_asesor);
+        const asesor_guardado = await this.repositorio_asesor.save(nuevo_asesor);
+        perfil_completo = {
+          id_asesor: asesor_guardado.id,
+          nombre: asesor_guardado.nombre,
+          apellido: asesor_guardado.apellido,
+        };
       }
 
+      const payload = { 
+        sub: usuario_guardado.id, 
+        correo: usuario_guardado.correo, 
+        rol: usuario_guardado.rol 
+      };
+
+      const token_acceso = await this.jwt_service.signAsync(payload);
+
       const { contrasena: _, ...usuario_para_retornar } = usuario_guardado;
-      return usuario_para_retornar;
+      
+      return {
+        message: 'Registro exitoso',
+        token_acceso,
+        usuario: {
+          ...usuario_para_retornar,
+          perfil: perfil_completo,
+        },
+      };
     } catch (error) {
       if (error.code === '23505') {
         throw new BadRequestException('El correo ya está en uso.');

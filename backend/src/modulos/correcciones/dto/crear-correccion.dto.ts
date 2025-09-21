@@ -1,11 +1,11 @@
 import { IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CrearObservacionDto {
-  @ApiProperty({ example: 'Revisar la ortografía del capítulo 2.' })
+export class CrearCorreccionDto {
+  @ApiProperty({ example: 'He corregido la ortografía y mejorado la redacción del párrafo.' })
   @IsString()
   @IsNotEmpty()
-  contenido: string;
+  descripcion: string;
 
   @ApiProperty({ example: 10.5 })
   @IsNumber()
@@ -36,4 +36,14 @@ export class CrearObservacionDto {
   @IsNumber()
   @Min(1)
   pagina_fin: number;
+
+  @ApiProperty({ example: 5, description: 'ID de la observación a la que responde esta corrección' })
+  @IsNumber()
+  @IsNotEmpty()
+  id_observacion: number;
+
+  @ApiProperty({ example: 3, description: 'ID del documento donde se realiza la corrección' })
+  @IsNumber()
+  @IsNotEmpty()
+  id_documento: number;
 }

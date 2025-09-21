@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Observacion } from './entidades/observacion.entidad';
 import { Repository } from 'typeorm';
 import { CrearObservacionDto } from './dto/crear-observacion.dto';
 import { Documento } from '../documentos/entidades/documento.entidad';
-import { Usuario } from '../usuarios/entidades/usuario.entidad';
+import { Asesor } from '../asesores/entidades/asesor.entidad';
 import { ActualizarObservacionDto } from './dto/actualizar-observacion.dto';
 
 @Injectable()
@@ -14,49 +14,110 @@ export class ObservacionesService {
     private readonly repositorio_observacion: Repository<Observacion>,
     @InjectRepository(Documento)
     private readonly repositorio_documento: Repository<Documento>,
-    @InjectRepository(Usuario)
-    private readonly repositorio_usuario: Repository<Usuario>,
+    @InjectRepository(Asesor)
+    private readonly repositorio_asesor: Repository<Asesor>,
   ) {}
 
-  async crear(id_documento: number, crearObservacionDto: CrearObservacionDto) {
-    const { id_autor, ...datosObservacion } = crearObservacionDto;
-    
+  async crear(id_documento: number, crear_observacion_dto: CrearObservacionDto, id_usuario: number) {
     const documento = await this.repositorio_documento.findOneBy({ id: id_documento });
     if (!documento) {
       throw new NotFoundException(`Documento con ID '${id_documento}' no encontrado.`);
     }
 
-    const autor = await this.repositorio_usuario.findOneBy({ id: id_autor });
-    if (!autor) {
-      throw new NotFoundException(`Usuario (autor) con ID '${id_autor}' no encontrado.`);
-    }
-
-    const nuevaObservacion = this.repositorio_observacion.create({
-      ...datosObservacion,
-      documento,
-      autor,
+    const asesor = await this.repositorio_asesor.findOne({
+      where: { usuario: { id: id_usuario } },
     });
 
-    return this.repositorio_observacion.save(nuevaObservacion);
+    if (!asesor) {
+      throw new ForbiddenException('Solo los asesores pueden crear observaciones.');
+    }
+
+    const nueva_observacion = this.repositorio_observacion.create({
+      ...crear_observacion_dto,
+      documento,
+      autor: asesor,
+    });
+
+    return this.repositorio_observacion.save(nueva_observacion);
   }
 
-  async obtenerPorDocumento(id_documento: number) {
+  async obtenerPorDocumento(id_documento: number, incluir_archivadas: boolean = false) {
+    const condiciones: any = { documento: { id: id_documento } };
+    
+    if (!incluir_archivadas) {
+      condiciones.archivada = false;
+    }
+
     return this.repositorio_observacion.find({
-      where: { documento: { id: id_documento } },
+      where: condiciones,
+      relations: ['correccion', 'correccion.estudiante'],
       order: { fecha_creacion: 'DESC' },
     });
   }
 
-  async actualizar(id: number, actualizarObservacionDto: ActualizarObservacionDto) {
-    const observacion = await this.repositorio_observacion.preload({
-      id: id,
-      ...actualizarObservacionDto,
+  async actualizar(id: number, actualizar_observacion_dto: ActualizarObservacionDto, id_usuario: number) {
+    const observacion = await this.repositorio_observacion.findOne({
+      where: { id },
+      relations: ['autor'],
     });
 
     if (!observacion) {
       throw new NotFoundException(`Observación con ID '${id}' no encontrada.`);
     }
 
+    const asesor = await this.repositorio_asesor.findOne({
+      where: { usuario: { id: id_usuario } },
+    });
+
+    if (!asesor || asesor.id !== observacion.autor.id) {
+      throw new ForbiddenException('Solo el asesor que creó la observación puede actualizarla.');
+    }
+
+    Object.assign(observacion, actualizar_observacion_dto);
+    return this.repositorio_observacion.save(observacion);
+  }
+
+  async archivar(id: number, id_usuario: number) {
+    const observacion = await this.repositorio_observacion.findOne({
+      where: { id },
+      relations: ['autor'],
+    });
+
+    if (!observacion) {
+      throw new NotFoundException(`Observación con ID '${id}' no encontrada.`);
+    }
+
+    const asesor = await this.repositorio_asesor.findOne({
+      where: { usuario: { id: id_usuario } },
+    });
+
+    if (!asesor || asesor.id !== observacion.autor.id) {
+      throw new ForbiddenException('Solo el asesor que creó la observación puede archivarla.');
+    }
+
+    observacion.archivada = true;
+    return this.repositorio_observacion.save(observacion);
+  }
+
+  async restaurar(id: number, id_usuario: number) {
+    const observacion = await this.repositorio_observacion.findOne({
+      where: { id, archivada: true },
+      relations: ['autor'],
+    });
+
+    if (!observacion) {
+      throw new NotFoundException(`Observación archivada con ID '${id}' no encontrada.`);
+    }
+
+    const asesor = await this.repositorio_asesor.findOne({
+      where: { usuario: { id: id_usuario } },
+    });
+
+    if (!asesor || asesor.id !== observacion.autor.id) {
+      throw new ForbiddenException('Solo el asesor que archivó la observación puede restaurarla.');
+    }
+
+    observacion.archivada = false;
     return this.repositorio_observacion.save(observacion);
   }
 }
