@@ -39,6 +39,9 @@ export class Observacion {
   @Column({ type: 'int' })
   pagina_fin: number;
 
+  @Column({ type: 'varchar', length: 7, default: '#FFD700' })
+  color: string;
+
   @Column({ type: 'boolean', default: false })
   archivada: boolean;
 
